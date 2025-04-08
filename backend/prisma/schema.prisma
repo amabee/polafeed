@@ -19,6 +19,8 @@ model User {
   profilePicUrl String?
   posts         Post[]
   createdAt     DateTime @default(now())
+
+  userInformation UserInformation?
 }
 
 model UserInformation {
@@ -30,6 +32,8 @@ model UserInformation {
   birthDate DateTime
   phone     String
   gender    String
+
+  user User @relation(fields: [userId], references: [id])
 }
 
 // ==================
