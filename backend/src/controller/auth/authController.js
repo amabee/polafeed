@@ -55,3 +55,29 @@ export const signup = async (req, res) => {
     });
   }
 };
+
+export const login = async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({
+        error: "Username/email and password are required ",
+      });
+    }
+
+    const result = await authRepository.login({ username, password });
+
+    return res.status(200).json({
+      success: "Successfully logged in",
+      data: result,
+    });
+  } catch (error) {
+    if (error.message === "Invalid username or password") {
+      return res.status(422).json({
+        error: error.message,
+      });
+    }
+    console.log(error);
+  }
+};

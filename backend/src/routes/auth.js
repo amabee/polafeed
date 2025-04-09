@@ -1,21 +1,24 @@
 import express from "express";
-import { signup } from "../controller/auth/authController.js";
+import { login, signup } from "../controller/auth/authController.js";
 import { validateSignup } from "../middleware/AuthValidator.js";
 import { validationResult } from "express-validator";
-
 
 const router = express.Router();
 
 import "../swaggerDoc/authDoc.js";
 
-router.post("/signup", validateSignup, (req, res) => {
+router.post("/signup", validateSignup, async(req, res) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
     return res.status(422).json({ errors: errors.array() });
   }
 
-  signup(req, res);
+  await signup(req, res);
+});
+
+router.post("/login", async (req, res) => {
+  await login(req, res);
 });
 
 export default router;

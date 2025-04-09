@@ -1,0 +1,81 @@
+// ==================
+// 📦 User Models
+// ==================
+model User {
+    id            String   @id
+    username      String   @unique
+    email         String   @unique
+    password      String
+    bio           String?
+    profilePicUrl String?
+    posts         Post[]
+    createdAt     DateTime @default(now())
+
+    onlineStatus OnlineStatus @default(offline)
+
+    lastLogin DateTime? @updatedAt
+
+    isVerified Boolean @default(false)
+
+    userInformation   UserInformation?
+    UserCustomization UserCustomization?
+    PostCardStyle     PostCardStyle[]
+    Session           Session[]
+}
+
+enum OnlineStatus {
+    online
+    offline
+    away
+    invisible
+}
+
+model UserInformation {
+    id        Int      @id @default(autoincrement())
+    userId    String   @unique
+    firstName String
+    lastName  String
+    address   String
+    birthDate DateTime
+    phone     String
+    gender    String
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// =============================
+// 👥 USER Sessipn Models
+// =============================
+
+model Session {
+    id        String   @id @default(uuid())
+    userId    String
+    token     String   @unique
+    userAgent String?
+    ipAddress String?
+    createdAt DateTime @default(now())
+    expiresAt DateTime
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// =============================
+
+// =============================
+// 👥 USER CUSTOMIZATION Models
+// =============================
+
+model UserCustomization {
+    id               String  @id
+    userId           String  @unique
+    backgroundStyle  Json? // Can be an image or maybe just a color ¯\_(ツ)_/¯
+    profileCardStyle Json? // JSON for layouts, fonts, etc...
+    loadingScreen    String?
+    theme            String?
+    font             String?
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime? @updatedAt
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

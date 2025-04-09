@@ -1,0 +1,20 @@
+// =============================
+// 💻 Theme Asset Models
+// =============================
+
+model ThemeAsset {
+    id        String @id
+    creatorId String
+
+    name        String
+    description String?
+    isPublic    Boolean @default(true)
+
+    backgroundUrl    String?
+    theme            String?
+    font             String?
+    profileCardStyle Json?
+    loadingScreen    String?
+
+    createdAt DateTime @default(now())
+}

@@ -33,9 +33,7 @@ export const validateSignup = [
   body("gender").isString().notEmpty().withMessage("Gender is required"),
 
   // VALIDATE Phone
-  body("phone")
-    .isMobilePhone()
-    .withMessage("Invalid phone number format"),
+  body("phone").isMobilePhone().withMessage("Invalid phone number format"),
 
   // VALIDATE Birthdate
   body("birthday").isDate().notEmpty().withMessage("Invalid birth date format"),

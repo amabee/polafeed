@@ -1,93 +1,23 @@
 import { prisma } from "../../utils/db.js";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
+import {
+  checkForExistingUser,
+  generateAuthToken,
+  parseBirthday,
+} from "../../utils/authHelper.js";
 
 export const signup = async (data) => {
   const numericUuid = uuidv4().replace(/\D/g, "").slice(0, 12);
+  const customizationUuid = uuidv4();
 
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(data.password, salt);
 
-  let birthDate;
-  try {
-    if (typeof data.birthday === "string") {
-      if (data.birthday.includes("/")) {
-        const birthdayArray = data.birthday.split("/");
+  const birthDate = parseBirthday(data.birthday);
 
-        if (birthdayArray.length !== 3) {
-          throw new Error("Birthday must be in MM/DD/YYYY format");
-        }
-
-        const month = parseInt(birthdayArray[0], 10);
-        const day = parseInt(birthdayArray[1], 10);
-        const year = parseInt(birthdayArray[2], 10);
-
-        birthDate = new Date(year, month - 1, day);
-
-        if (
-          isNaN(birthDate.getTime()) ||
-          birthDate.getMonth() !== month - 1 ||
-          birthDate.getDate() !== day
-        ) {
-          throw new Error("Invalid date components");
-        }
-      } else {
-        birthDate = new Date(data.birthday);
-        if (isNaN(birthDate.getTime())) {
-          throw new Error("Could not parse birthday string");
-        }
-      }
-    } else if (data.birthday instanceof Date) {
-      birthDate = data.birthday;
-      if (isNaN(birthDate.getTime())) {
-        throw new Error("Invalid Date object");
-      }
-    } else {
-      throw new Error(
-        "Birthday must be a string in MM/DD/YYYY format or a valid Date object"
-      );
-    }
-  } catch (error) {
-    console.error(
-      "Birthday parsing error:",
-      error.message,
-      "Value:",
-      data.birthday
-    );
-    throw new Error("Invalid birthdate format: " + error.message);
-  }
-
-  const transaction = await prisma.$transaction(async (prisma) => {
-    const isExistingUser = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { username: data.username },
-          { email: data.email },
-          {
-            userInformation: {
-              phone: data.phone,
-            },
-          },
-        ],
-      },
-      include: {
-        userInformation: true,
-      },
-    });
-
-    if (isExistingUser) {
-      if (isExistingUser.username === data.username) {
-        throw new Error("Username is already taken");
-      }
-
-      if (isExistingUser.email === data.email) {
-        throw new Error("Email is already taken");
-      }
-
-      if (isExistingUser.userInformation.phone === data.phone) {
-        throw new Error("Phone number is already taken");
-      }
-    }
+  return await prisma.$transaction(async (prisma) => {
+    await checkForExistingUser(prisma, data);
 
     const newUser = await prisma.user.create({
       data: {
@@ -95,6 +25,7 @@ export const signup = async (data) => {
         username: data.username,
         email: data.email,
         password: hashedPassword,
+        lastLogin: null,
         userInformation: {
           create: {
             firstName: data.firstname,
@@ -105,11 +36,79 @@ export const signup = async (data) => {
             birthDate: birthDate,
           },
         },
+        UserCustomization: {
+          create: {
+            id: customizationUuid,
+            backgroundStyle: {
+              type: "color",
+              data: "#ffffff",
+            },
+            profileCardStyle: {
+              layout: "default",
+              borderWidth: "2px",
+              borderRadius: "12px",
+              shadow: true,
+            },
+            loadingScreen: "spinner",
+            theme: "light",
+            font: "Roboto",
+          },
+        },
       },
     });
 
     return newUser;
   });
-
-  return transaction;
 };
+
+export const login = async (credentials) => {
+  if (!credentials.username || !credentials.password) {
+    throw new Error("Username / Email and Password are required");
+  }
+
+  const user = await prisma.user.findFirst({
+    where: {
+      OR: [{ username: credentials.username }, { email: credentials.username }],
+    },
+    include: {
+      userInformation: true,
+      UserCustomization: true,
+    },
+  });
+
+  if (!user) {
+    throw new Error("Invalid username or password");
+  }
+
+  const isPasswordValid = await bcrypt.compare(
+    credentials.password,
+    user.password
+  );
+
+  if (!isPasswordValid) {
+    throw new Error("Invalid username or password");
+  }
+
+  const token = generateAuthToken(user);
+  console.log(user)
+
+  await updateLastLogin(user.id);
+
+  const { password, ...userWithoutPassword } = user;
+
+  return {
+    user: userWithoutPassword,
+    token: token,
+  };
+};
+
+async function updateLastLogin(userId) {
+  return await prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      lastLogin: new Date(),
+    },
+  });
+}

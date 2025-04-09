@@ -1,0 +1,60 @@
+
+// ==================
+// 📸 Post Models
+// ==================
+model Post {
+  id        String   @id
+  userId    String
+  caption   String?
+  imageUrl  String
+  createdAt DateTime @default(now())
+
+  postCardStyleId String?
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postCardStyle PostCardStyle? @relation(fields: [postCardStyleId], references: [id])
+}
+
+// ==================
+// 📸 Post Card Style Models
+// ==================
+model PostCardStyle {
+  id        String  @id
+  name      String?
+  creatorId String
+
+  // Layout options
+  layout   Layout @default(classic)
+  rotation Int?
+
+  // Background styling
+  background Json?
+
+  // Border styling
+  borderStyle Json?
+  borderImage Json?
+
+  // Typography
+  font         String?
+  captionStyle Json?
+
+  // Effects
+  shadow String?
+
+  badgeStyle Json?
+
+  isPublic  Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  creator User   @relation(fields: [creatorId], references: [id])
+  Post    Post[]
+}
+
+enum Layout {
+  classic
+  vertical
+  compact
+  wide
+  square
+}
