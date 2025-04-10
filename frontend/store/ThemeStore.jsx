@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -11,3 +11,5 @@ const useThemeStore = create(
     { name: "polafeed-theme" }
   )
 );
+
+export default useThemeStore;
