@@ -6,6 +6,7 @@ import {
   generateAuthToken,
   parseBirthday,
 } from "../../utils/authHelper.js";
+import { addDays } from "date-fns";
 
 export const signup = async (data) => {
   const numericUuid = uuidv4().replace(/\D/g, "").slice(0, 12);
@@ -61,7 +62,7 @@ export const signup = async (data) => {
   });
 };
 
-export const login = async (credentials) => {
+export const login = async (credentials, req) => {
   if (!credentials.username || !credentials.password) {
     throw new Error("Username / Email and Password are required");
   }
@@ -90,9 +91,20 @@ export const login = async (credentials) => {
   }
 
   const token = generateAuthToken(user);
-  console.log(user)
 
   await updateLastLogin(user.id);
+
+  // Create the session
+
+  await prisma.session.create({
+    data: {
+      userId: user.id,
+      token: token,
+      userAgent: req?.headers["user-agent"],
+      ipAddress: req?.ip || null,
+      expiresAt: addDays(new Date(), 7),
+    },
+  });
 
   const { password, ...userWithoutPassword } = user;
 
