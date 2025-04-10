@@ -1,9 +1,11 @@
+import Cookies from "js-cookie";
+
 const { create } = require("zustand");
 
 const useAuthStore = create((set) => ({
   isLogin: true,
   showPassword: false,
-  
+
   formData: {
     username: "",
     email: "",
@@ -17,6 +19,14 @@ const useAuthStore = create((set) => ({
     set((state) => ({
       formData: { ...state.formData, ...newFormData },
     })),
+
+  //
+  logout: () => {
+    Cookies.remove("token");
+    localStorage.clear();
+
+    window.location.href = "/";
+  },
 }));
 
 export default useAuthStore;

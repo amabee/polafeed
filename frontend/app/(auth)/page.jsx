@@ -1,4 +1,5 @@
 "use client";
+import { useLogin } from "@/queries/auth";
 import useAuthStore from "@/store/AuthStore";
 import useThemeStore from "@/store/ThemeStore";
 import { Camera, Eye, EyeOff, Moon, Sun } from "lucide-react";
@@ -17,6 +18,7 @@ const Authentication = () => {
     setFormData,
   } = useAuthStore();
   const [mounted, setMounted] = useState(false);
+  const login = useLogin();
 
   useEffect(() => {
     setMounted(true);
@@ -25,8 +27,7 @@ const Authentication = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Working
-    alert(formData.password);
+    login.mutate({ username: formData.username, password: formData.password });
   };
 
   const handleInputChange = (e) => {

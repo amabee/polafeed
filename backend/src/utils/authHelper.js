@@ -82,7 +82,6 @@ export function parseBirthday(birthday) {
 export function generateAuthToken(user) {
   const payload = {
     userId: user.id,
-    role: user.role || 'user',
     iat: Math.floor(Date.now() / 1000),
     jti: crypto.randomUUID(),
     iss: 'polafeed-api',
