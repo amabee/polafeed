@@ -7,6 +7,12 @@ const useAuthStore = create((set) => ({
   showPassword: false,
 
   formData: {
+    firstname: "",
+    lastname: "",
+    address: "",
+    birthday: "",
+    phone: "",
+    gender: "",
     username: "",
     email: "",
     password: "",
@@ -20,7 +26,6 @@ const useAuthStore = create((set) => ({
       formData: { ...state.formData, ...newFormData },
     })),
 
-  //
   logout: () => {
     Cookies.remove("token");
     localStorage.clear();

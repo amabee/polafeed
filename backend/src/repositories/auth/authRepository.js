@@ -17,6 +17,8 @@ export const signup = async (data) => {
 
   const birthDate = parseBirthday(data.birthday);
 
+  console.log("BIRTHDAY: ", data.birthday);
+
   return await prisma.$transaction(async (prisma) => {
     await checkForExistingUser(prisma, data);
 

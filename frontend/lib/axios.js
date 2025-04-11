@@ -26,8 +26,11 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    const errorMessage = error.response?.data?.error || "Something went wrong";
-    console.error("Axios Error: ", errorMessage);
+    const errorMessage =
+      error.response?.data?.error ||
+      error.response?.data?.errors ||
+      error.response?.data?.message ||
+      "Something went wrong while performing the action";
     return Promise.reject(errorMessage);
   }
 );

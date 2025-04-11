@@ -1,11 +1,12 @@
 "use client";
-import { useLogin } from "@/queries/auth";
+import { useUserAuthentication } from "@/queries/auth";
 import useAuthStore from "@/store/AuthStore";
 import useThemeStore from "@/store/ThemeStore";
 import { Camera, Eye, EyeOff, Moon, Sun } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 const Authentication = () => {
   const { isDarkMode, toggleTheme } = useThemeStore();
@@ -18,7 +19,10 @@ const Authentication = () => {
     setFormData,
   } = useAuthStore();
   const [mounted, setMounted] = useState(false);
-  const login = useLogin();
+  const { login, signup } = useUserAuthentication();
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const genderOptions = ["Male", "Female", "Non-binary", "Prefer not to say"];
 
   useEffect(() => {
     setMounted(true);
@@ -27,12 +31,32 @@ const Authentication = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    login.mutate({ username: formData.username, password: formData.password });
+    if (isLogin) {
+      login.mutate({
+        username: formData.username,
+        password: formData.password,
+      });
+    } else {
+      if (formData.password !== confirmPassword) {
+        toast.error("Passwords do not match");
+        return;
+      }
+      signup.mutate({
+        firstname: formData.firstname,
+        lastname: formData.lastname,
+        address: formData.address,
+        birthday: formData.birthday,
+        phone: formData.phone,
+        gender: formData.gender,
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      });
+    }
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-
     setFormData({ [name]: value });
   };
 
@@ -104,8 +128,136 @@ const Authentication = () => {
             </p>
           </div>
 
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            {!isLogin && (
+          {isLogin ? (
+            // LOGIN FORM
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              <div>
+                <label
+                  className={`block text-xs font-medium ${
+                    isDarkMode ? "text-gray-200" : "text-gray-700"
+                  } mb-1`}
+                >
+                  Email / Username
+                </label>
+                <input
+                  id="username"
+                  name="username"
+                  type="text"
+                  value={formData.username || ""}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 rounded-lg border ${
+                    isDarkMode
+                      ? "border-gray-600 bg-gray-700 text-white"
+                      : "border-gray-300 bg-white text-gray-900"
+                  } focus:outline-none focus:ring-2 focus:ring-purple-400`}
+                  placeholder="Enter your email or username"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-1">
+                  <label
+                    className={`block text-xs font-medium ${
+                      isDarkMode ? "text-gray-200" : "text-gray-700"
+                    }`}
+                  >
+                    Password
+                  </label>
+                </div>
+                <div className="relative">
+                  <input
+                    id="password"
+                    name="password"
+                    value={formData.password || ""}
+                    onChange={handleInputChange}
+                    type={showPassword ? "text" : "password"}
+                    className={`w-full px-3 py-2 rounded-lg border ${
+                      isDarkMode
+                        ? "border-gray-600 bg-gray-700 text-white"
+                        : "border-gray-300 bg-white text-gray-900"
+                    } focus:outline-none focus:ring-2 focus:ring-purple-400`}
+                    placeholder="Enter your password"
+                  />
+
+                  <button
+                    type="button"
+                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${
+                      isDarkMode ? "text-gray-300" : "text-gray-500"
+                    }`}
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  className={`${
+                    isDarkMode
+                      ? "text-rose-300 hover:text-rose-200 hover:cursor-pointer"
+                      : "text-rose-500 hover:text-rose-600 hover:cursor-pointer"
+                  } text-sm mt-5 mb-5 float-end `}
+                >
+                  Forgot password?
+                </button>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2 px-4 bg-purple-600 hover:bg-purple-700 rounded-lg text-white font-medium transition-colors text-sm hover:cursor-pointer"
+              >
+                {login.isLoading ? "Logging in..." : "Log In"}
+              </button>
+            </form>
+          ) : (
+            // SIGNUP FORM
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              <div>
+                <label
+                  className={`block text-xs font-medium ${
+                    isDarkMode ? "text-gray-200" : "text-gray-700"
+                  } mb-1`}
+                >
+                  Firstname
+                </label>
+                <input
+                  id="firstname"
+                  name="firstname"
+                  type="text"
+                  value={formData.firstname || ""}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 rounded-lg border ${
+                    isDarkMode
+                      ? "border-gray-600 bg-gray-700 text-white"
+                      : "border-gray-300 bg-white text-gray-900"
+                  } focus:outline-none focus:ring-2 focus:ring-purple-400`}
+                  placeholder="Enter your firstname"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  className={`block text-xs font-medium ${
+                    isDarkMode ? "text-gray-200" : "text-gray-700"
+                  } mb-1`}
+                >
+                  Lastname
+                </label>
+                <input
+                  id="lastname"
+                  name="lastname"
+                  type="text"
+                  value={formData.lastname || ""}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 rounded-lg border ${
+                    isDarkMode
+                      ? "border-gray-600 bg-gray-700 text-white"
+                      : "border-gray-300 bg-white text-gray-900"
+                  } focus:outline-none focus:ring-2 focus:ring-purple-400`}
+                  placeholder="Enter your lastname"
+                  required
+                />
+              </div>
               <div>
                 <label
                   className={`block text-xs font-medium ${
@@ -118,92 +270,177 @@ const Authentication = () => {
                   id="username"
                   name="username"
                   type="text"
-                  value={formData.username}
+                  value={formData.username || ""}
                   onChange={handleInputChange}
                   className={`w-full px-3 py-2 rounded-lg border ${
                     isDarkMode
                       ? "border-gray-600 bg-gray-700 text-white"
                       : "border-gray-300 bg-white text-gray-900"
                   } focus:outline-none focus:ring-2 focus:ring-purple-400`}
-                  placeholder="Enter your username"
+                  placeholder="Choose a username"
+                  required
                 />
               </div>
-            )}
-
-            <div>
-              <label
-                className={`block text-xs font-medium ${
-                  isDarkMode ? "text-gray-200" : "text-gray-700"
-                } mb-1`}
-              >
-                Email / Username
-              </label>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                value={formData.username}
-                onChange={handleInputChange}
-                className={`w-full px-3 py-2 rounded-lg border ${
-                  isDarkMode
-                    ? "border-gray-600 bg-gray-700 text-white"
-                    : "border-gray-300 bg-white text-gray-900"
-                } focus:outline-none focus:ring-2 focus:ring-purple-400`}
-                placeholder="Enter your email or username"
-              />
-            </div>
-
-            <div>
-              <div className="flex justify-between mb-1">
+              <div>
                 <label
                   className={`block text-xs font-medium ${
                     isDarkMode ? "text-gray-200" : "text-gray-700"
-                  }`}
+                  } mb-1`}
                 >
-                  Password
+                  Email
                 </label>
-              </div>
-              <div className="relative">
                 <input
-                  id="password"
-                  name="password"
-                  value={formData.password}
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email || ""}
                   onChange={handleInputChange}
-                  type={showPassword ? "text" : "password"}
                   className={`w-full px-3 py-2 rounded-lg border ${
                     isDarkMode
                       ? "border-gray-600 bg-gray-700 text-white"
                       : "border-gray-300 bg-white text-gray-900"
                   } focus:outline-none focus:ring-2 focus:ring-purple-400`}
-                  placeholder="Enter your password"
+                  placeholder="Enter your email"
+                  required
                 />
-
-                <button
-                  type="button"
-                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${
-                    isDarkMode ? "text-gray-300" : "text-gray-500"
-                  }`}
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
               </div>
-
-              {isLogin && (
-                <button
-                  type="button"
-                  className={`${
-                    isDarkMode
-                      ? "text-rose-300 hover:text-rose-200 hover:cursor-pointer"
-                      : "text-rose-500 hover:text-rose-600 hover:cursor-pointer"
-                  } text-sm mt-5 mb-5 float-end `}
+              <div>
+                <label
+                  className={`block text-xs font-medium ${
+                    isDarkMode ? "text-gray-200" : "text-gray-700"
+                  } mb-1`}
                 >
-                  Forgot password?
-                </button>
-              )}
-            </div>
+                  Address
+                </label>
+                <input
+                  id="address"
+                  name="address"
+                  type="text"
+                  value={formData.address || ""}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 rounded-lg border ${
+                    isDarkMode
+                      ? "border-gray-600 bg-gray-700 text-white"
+                      : "border-gray-300 bg-white text-gray-900"
+                  } focus:outline-none focus:ring-2 focus:ring-purple-400`}
+                  placeholder="Enter your address"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  className={`block text-xs font-medium ${
+                    isDarkMode ? "text-gray-200" : "text-gray-700"
+                  } mb-1`}
+                >
+                  Phone Number
+                </label>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="text"
+                  value={formData.phone || ""}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 rounded-lg border ${
+                    isDarkMode
+                      ? "border-gray-600 bg-gray-700 text-white"
+                      : "border-gray-300 bg-white text-gray-900"
+                  } focus:outline-none focus:ring-2 focus:ring-purple-400`}
+                  placeholder="Enter your phone"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  className={`block text-xs font-medium ${
+                    isDarkMode ? "text-gray-200" : "text-gray-700"
+                  } mb-1`}
+                >
+                  Birthday
+                </label>
+                <div>
+                  <div>
+                    <input
+                      id="birthday"
+                      name="birthday"
+                      type="date"
+                      value={formData.birthday || ""}
+                      onChange={handleInputChange}
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        isDarkMode
+                          ? "border-gray-600 bg-gray-700 text-white"
+                          : "border-gray-300 bg-white text-gray-900"
+                      } focus:outline-none focus:ring-2 focus:ring-purple-400`}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label
+                  className={`block text-xs font-medium ${
+                    isDarkMode ? "text-gray-200" : "text-gray-700"
+                  } mb-1`}
+                >
+                  Gender
+                </label>
+                <select
+                  id="gender"
+                  name="gender"
+                  value={formData.gender || ""}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 rounded-lg border ${
+                    isDarkMode
+                      ? "border-gray-600 bg-gray-700 text-white"
+                      : "border-gray-300 bg-white text-gray-900"
+                  } focus:outline-none focus:ring-2 focus:ring-purple-400`}
+                  required
+                >
+                  <option value="">Select Gender</option>
+                  {genderOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <div className="flex justify-between mb-1">
+                  <label
+                    className={`block text-xs font-medium ${
+                      isDarkMode ? "text-gray-200" : "text-gray-700"
+                    }`}
+                  >
+                    Password
+                  </label>
+                </div>
+                <div className="relative">
+                  <input
+                    id="password"
+                    name="password"
+                    value={formData.password || ""}
+                    onChange={handleInputChange}
+                    type={showPassword ? "text" : "password"}
+                    className={`w-full px-3 py-2 rounded-lg border ${
+                      isDarkMode
+                        ? "border-gray-600 bg-gray-700 text-white"
+                        : "border-gray-300 bg-white text-gray-900"
+                    } focus:outline-none focus:ring-2 focus:ring-purple-400`}
+                    placeholder="Create a password"
+                    required
+                  />
 
-            {!isLogin && (
+                  <button
+                    type="button"
+                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${
+                      isDarkMode ? "text-gray-300" : "text-gray-500"
+                    }`}
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
               <div>
                 <label
                   className={`block text-xs font-medium ${
@@ -213,24 +450,30 @@ const Authentication = () => {
                   Confirm Password
                 </label>
                 <input
-                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type={showPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   className={`w-full px-3 py-2 rounded-lg border ${
                     isDarkMode
                       ? "border-gray-600 bg-gray-700 text-white"
                       : "border-gray-300 bg-white text-gray-900"
                   } focus:outline-none focus:ring-2 focus:ring-purple-400`}
                   placeholder="Confirm your password"
+                  required
                 />
               </div>
-            )}
 
-            <button
-              type="submit"
-              className="w-full py-2 px-4 bg-purple-600 hover:bg-purple-700 rounded-lg text-white font-medium transition-colors text-sm hover:cursor-pointer"
-            >
-              {isLogin ? "Log In" : "Sign Up"}
-            </button>
-          </form>
+              <button
+                type="submit"
+                disabled={signup.isLoading || login.isLoading}
+                className="w-full py-2 px-4 bg-purple-600 hover:bg-purple-700 rounded-lg text-white font-medium transition-colors text-sm hover:cursor-pointer"
+              >
+                {signup.isLoading ? "Creating Account..." : "Sign Up"}
+              </button>
+            </form>
+          )}
 
           <div className="mt-5">
             <div className="flex items-center">
@@ -316,6 +559,7 @@ const Authentication = () => {
                 ? "Don't have an account? "
                 : "Already have an account? "}
               <button
+                type="button"
                 onClick={() => setIsLogin(!isLogin)}
                 className={`${
                   isDarkMode

@@ -9,12 +9,28 @@ export const login = async (credentials) => {
     });
 
     if (response.status !== 200) {
-      throw new Error("Failed logging in");
+      return response.data.error;
     }
-
     return response.data;
   } catch (error) {
-    console.error("Login Failed: ", error);
-    throw error;
+    throw new Error(error);
+  }
+};
+
+export const signup = async (credentials) => {
+  try {
+    const response = await axios({
+      url: "/auth/signup",
+      method: "POST",
+      data: credentials,
+    });
+
+    if (response.status !== 201) {
+      return response.data.error;
+    }
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    throw new Error(error);
   }
 };

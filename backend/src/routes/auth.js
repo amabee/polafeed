@@ -7,11 +7,12 @@ const router = express.Router();
 
 import "../swaggerDoc/authDoc.js";
 
-router.post("/signup", validateSignup, async(req, res) => {
+router.post("/signup", validateSignup, async (req, res) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    return res.status(422).json({ errors: errors.array() });
+    const messages = errors.array().map((err) => err.msg);
+    return res.status(422).json({ error: messages });
   }
 
   await signup(req, res);
